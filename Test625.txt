@@ -1,2 +1,2 @@
 
-Welcome to my awesome project! This repository contains the source code and documentation for AAE 625.
+UPDATE from desktop, UPDATE! Welcome to my awesome project! This repository contains the source code and documentation for AAE 625.
