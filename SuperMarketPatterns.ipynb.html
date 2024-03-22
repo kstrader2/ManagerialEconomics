@@ -1,0 +1,159 @@
+<html>
+<head>
+<title>SuperMarketPatterns.ipynb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8c8c8c; font-style: italic;}
+.s1 { color: #0033b3;}
+.s2 { color: #080808;}
+.s3 { color: #067d17;}
+.s4 { color: #0037a6;}
+.s5 { color: #1750eb;}
+</style>
+</head>
+<body bgcolor="#ffffff">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#c0c0c0" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+SuperMarketPatterns.ipynb</font>
+</center></td></tr></table>
+<pre><span class="s0">#%% 
+</span><span class="s1">import </span><span class="s2">pandas </span><span class="s1">as </span><span class="s2">pd</span>
+<span class="s1">import </span><span class="s2">numpy </span><span class="s1">as </span><span class="s2">np</span>
+<span class="s1">import </span><span class="s2">matplotlib.pyplot </span><span class="s1">as </span><span class="s2">plt</span>
+<span class="s1">import </span><span class="s2">matplotlib.dates </span><span class="s1">as </span><span class="s2">mdates</span>
+<span class="s1">import </span><span class="s2">chart_studio.plotly </span><span class="s1">as </span><span class="s2">py</span>
+<span class="s1">import </span><span class="s2">plotly.graph_objs </span><span class="s1">as </span><span class="s2">go</span>
+<span class="s1">import </span><span class="s2">plotly </span><span class="s1">as </span><span class="s2">plotly</span>
+<span class="s1">import </span><span class="s2">sys</span>
+<span class="s1">import </span><span class="s2">types</span>
+<span class="s1">import </span><span class="s2">statsmodels.api </span><span class="s1">as </span><span class="s2">sm</span>
+<span class="s0">#%% 
+</span><span class="s2">DataDir = </span><span class="s3">r'C:\Users\Patron\Documents\GitHub\ManagerialEconomics\AAE625GitHub\MgrlEconAnaPub\ElasticityPricingStrategyAnalysis'</span>
+<span class="s2">NewDir = DataDir</span>
+<span class="s2">df= pd.read_csv(NewDir + </span><span class="s3">'</span><span class="s4">\\</span><span class="s3">supermarket_sales.csv'</span><span class="s2">)</span>
+<span class="s2">df.head()</span>
+<span class="s0">#%% 
+</span><span class="s2">df.info()</span>
+<span class="s0">#%% 
+</span><span class="s2">df[</span><span class="s3">&quot;Date&quot;</span><span class="s2">] = pd.to_datetime(df[</span><span class="s3">&quot;Date&quot;</span><span class="s2">])</span>
+<span class="s2">df[</span><span class="s3">&quot;Datetime&quot;</span><span class="s2">] = df[</span><span class="s3">&quot;Date&quot;</span><span class="s2">].dt.strftime(</span><span class="s3">&quot;%Y-%m-%d&quot;</span><span class="s2">) + </span><span class="s3">&quot; &quot; </span><span class="s2">+ df[</span><span class="s3">&quot;Time&quot;</span><span class="s2">]</span>
+
+<span class="s0"># Convert the 'Datetime' column to datetime format</span>
+<span class="s2">df[</span><span class="s3">&quot;Datetime&quot;</span><span class="s2">] = pd.to_datetime(df[</span><span class="s3">&quot;Datetime&quot;</span><span class="s2">], format=</span><span class="s3">&quot;%Y-%m-%d %H:%M&quot;</span><span class="s2">)</span>
+<span class="s2">df[</span><span class="s3">&quot;Time&quot;</span><span class="s2">] = pd.to_datetime(df[</span><span class="s3">&quot;Time&quot;</span><span class="s2">], format=</span><span class="s3">&quot;%H:%M&quot;</span><span class="s2">)</span>
+
+<span class="s0"># Define time intervals and corresponding categories</span>
+<span class="s2">time_bins = [</span><span class="s5">10</span><span class="s2">, </span><span class="s5">12</span><span class="s2">, </span><span class="s5">17</span><span class="s2">, </span><span class="s5">20</span><span class="s2">]</span>
+<span class="s2">time_labels = [</span><span class="s3">&quot;Morning&quot;</span><span class="s2">, </span><span class="s3">&quot;Afternoon&quot;</span><span class="s2">, </span><span class="s3">&quot;Evening&quot;</span><span class="s2">]</span>
+
+
+<span class="s2">df[</span><span class="s3">&quot;Hour&quot;</span><span class="s2">] = df[</span><span class="s3">&quot;Time&quot;</span><span class="s2">].dt.hour</span>
+<span class="s2">df[</span><span class="s3">&quot;Month&quot;</span><span class="s2">] = df[</span><span class="s3">&quot;Datetime&quot;</span><span class="s2">].dt.month</span>
+<span class="s2">df[</span><span class="s3">&quot;day_of_week&quot;</span><span class="s2">] = df[</span><span class="s3">&quot;Datetime&quot;</span><span class="s2">].dt.dayofweek</span>
+
+<span class="s0"># Use cut to categorize time into bins</span>
+<span class="s2">df[</span><span class="s3">&quot;time_category&quot;</span><span class="s2">] = pd.cut(df[</span><span class="s3">&quot;Hour&quot;</span><span class="s2">], bins=time_bins, labels=time_labels, right=</span><span class="s1">False</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">df.describe()</span>
+<span class="s0">#%% 
+#View unique values</span>
+<span class="s1">for </span><span class="s2">column </span><span class="s1">in </span><span class="s2">df.columns:</span>
+    <span class="s1">if </span><span class="s2">df[column].dtype != </span><span class="s3">&quot;float64&quot; </span><span class="s1">and </span><span class="s2">column </span><span class="s1">not in </span><span class="s2">[</span><span class="s3">&quot;Invoice ID&quot;</span><span class="s2">, </span><span class="s3">&quot;Date&quot;</span><span class="s2">, </span><span class="s3">&quot;Time&quot;</span><span class="s2">]:</span>
+        <span class="s2">unique_values = df[column].unique()[:</span><span class="s5">15</span><span class="s2">] </span><span class="s1">if </span><span class="s2">df[column].nunique() &gt; </span><span class="s5">15 </span><span class="s1">else </span><span class="s2">df[column].unique()</span>
+        <span class="s2">print(</span><span class="s3">&quot;**********&quot;</span><span class="s2">)</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Feature: </span><span class="s4">{</span><span class="s2">column</span><span class="s4">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Unique values: </span><span class="s4">{</span><span class="s2">unique_values</span><span class="s4">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Number of unique: </span><span class="s4">{</span><span class="s2">df[column].nunique()</span><span class="s4">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+<span class="s0">#%% 
+#View total Revenue by product category</span>
+<span class="s2">df.columns = [col.replace(</span><span class="s3">&quot; &quot;</span><span class="s2">,</span><span class="s3">&quot;_&quot;</span><span class="s2">) </span><span class="s1">for </span><span class="s2">col </span><span class="s1">in </span><span class="s2">df.columns]</span>
+<span class="s2">(pd.pivot_table(df,index=</span><span class="s3">&quot;Product_line&quot;</span><span class="s2">,values=</span><span class="s3">&quot;Total&quot;</span><span class="s2">,aggfunc=</span><span class="s3">&quot;sum&quot;</span><span class="s2">)</span>
+<span class="s2">.sort_values(by=</span><span class="s3">&quot;Total&quot;</span><span class="s2">, ascending=</span><span class="s1">False</span><span class="s2">)</span>
+<span class="s2">.style.format(</span><span class="s3">&quot;${:,.2f}&quot;</span><span class="s2">)</span>
+<span class="s2">)</span>
+<span class="s0">#%% 
+#What is the total gross income per product line?</span>
+<span class="s2">(pd.pivot_table(df, index =</span><span class="s3">&quot;Product_line&quot;</span><span class="s2">, values=</span><span class="s3">&quot;gross_income&quot;</span><span class="s2">, aggfunc=</span><span class="s3">&quot;sum&quot;</span><span class="s2">)</span>
+<span class="s2">.sort_values(by=</span><span class="s3">&quot;gross_income&quot;</span><span class="s2">,ascending=</span><span class="s1">False</span><span class="s2">)</span>
+<span class="s2">.style.format(</span><span class="s3">&quot;${:,.2f}&quot;</span><span class="s2">)</span>
+<span class="s2">)</span>
+<span class="s0">#%% 
+#Which Products Are Selling More During Peak and Off-Peak Hours?¶</span>
+<span class="s2">(pd.pivot_table(df, index=</span><span class="s3">&quot;Product_line&quot;</span><span class="s2">, values=</span><span class="s3">&quot;gross_income&quot;</span><span class="s2">,columns=</span><span class="s3">&quot;time_category&quot;</span><span class="s2">,aggfunc=</span><span class="s3">&quot;sum&quot;</span><span class="s2">,margins=</span><span class="s1">True</span><span class="s2">,observed=</span><span class="s1">False</span><span class="s2">)</span>
+<span class="s2">.style.format(</span><span class="s3">&quot;${:,.2f}&quot;</span><span class="s2">)</span>
+<span class="s2">.set_caption(</span><span class="s3">&quot;Product Line-wise Gross Income Distribution Across Part of Day&quot;</span><span class="s2">)</span>
+<span class="s2">.set_table_styles([</span>
+    <span class="s2">{</span><span class="s3">&quot;selector&quot;</span><span class="s2">: </span><span class="s3">&quot;caption&quot;</span><span class="s2">, </span><span class="s3">&quot;props&quot;</span><span class="s2">: [(</span><span class="s3">&quot;font-size&quot;</span><span class="s2">, </span><span class="s3">&quot;16px&quot;</span><span class="s2">), (</span><span class="s3">&quot;font-weight&quot;</span><span class="s2">, </span><span class="s3">&quot;bold&quot;</span><span class="s2">)]},</span>
+ <span class="s2">{</span><span class="s3">&quot;selector&quot;</span><span class="s2">: </span><span class="s3">'th'</span><span class="s2">, </span><span class="s3">'props'</span><span class="s2">: [(</span><span class="s3">'font-size'</span><span class="s2">, </span><span class="s3">'12px'</span><span class="s2">), (</span><span class="s3">'font-weight'</span><span class="s2">, </span><span class="s5">650</span><span class="s2">)]}</span>
+ <span class="s2">])</span>
+<span class="s2">)</span>
+<span class="s0">#%% 
+#What is the average transaction value for different days of the week in terms of both revenue and gross income?¶</span>
+<span class="s2">weekly_gross_income=df.groupby(</span><span class="s3">&quot;day_of_week&quot;</span><span class="s2">)[</span><span class="s3">&quot;gross_income&quot;</span><span class="s2">].sum()</span>
+
+<span class="s2">top_weekly_total = weekly_gross_income.nlargest(</span><span class="s5">1</span><span class="s2">)</span>
+<span class="s2">lowest_weekly_total = weekly_gross_income.nsmallest(</span><span class="s5">1</span><span class="s2">)</span>
+
+<span class="s2">fig, ax = plt.subplots(figsize=(</span><span class="s5">10</span><span class="s2">, </span><span class="s5">6</span><span class="s2">))</span>
+
+<span class="s1">def </span><span class="s2">format_currency(value, _):</span>
+    <span class="s1">return </span><span class="s3">f&quot;$</span><span class="s4">{</span><span class="s2">value</span><span class="s4">:</span><span class="s3">.0f</span><span class="s4">}</span><span class="s3">&quot;</span>
+
+<span class="s2">ax.plot(weekly_gross_income.index, weekly_gross_income.values, marker=</span><span class="s3">&quot;.&quot;</span><span class="s2">, linestyle=</span><span class="s3">&quot;-&quot;</span><span class="s2">,linewidth=</span><span class="s5">1.8</span><span class="s2">)</span>
+<span class="s2">ax.plot(top_weekly_total.index, top_weekly_total, marker=</span><span class="s3">&quot;^&quot;</span><span class="s2">, linestyle=</span><span class="s3">''</span><span class="s2">, color=</span><span class="s3">&quot;forestgreen&quot;</span><span class="s2">,ms=</span><span class="s5">10</span><span class="s2">)</span>
+<span class="s2">ax.plot(lowest_weekly_total.index, lowest_weekly_total, marker=</span><span class="s3">&quot;v&quot;</span><span class="s2">, linestyle=</span><span class="s3">&quot;&quot;</span><span class="s2">, color=</span><span class="s3">&quot;tab:red&quot;</span><span class="s2">,ms=</span><span class="s5">10</span><span class="s2">)</span>
+<span class="s2">ax.set_title(</span><span class="s3">&quot;Daily Gross Income&quot;</span><span class="s2">)</span>
+<span class="s2">ax.set_xticks(weekly_gross_income.index)</span>
+<span class="s2">ax.set_xticklabels([</span><span class="s3">&quot;Monday&quot;</span><span class="s2">, </span><span class="s3">&quot;Tuesday&quot;</span><span class="s2">, </span><span class="s3">&quot;Wednesday&quot;</span><span class="s2">, </span><span class="s3">&quot;Thursday&quot;</span><span class="s2">, </span><span class="s3">&quot;Friday&quot;</span><span class="s2">, </span><span class="s3">&quot;Saturday&quot;</span><span class="s2">, </span><span class="s3">&quot;Sunday&quot;</span><span class="s2">])</span>
+<span class="s2">ax.spines[[</span><span class="s3">&quot;top&quot;</span><span class="s2">,</span><span class="s3">&quot;right&quot;</span><span class="s2">,</span><span class="s3">&quot;left&quot;</span><span class="s2">]].set_visible(</span><span class="s1">False</span><span class="s2">)</span>
+<span class="s2">ax.set_axisbelow(</span><span class="s1">True</span><span class="s2">)</span>
+<span class="s2">plt.xlabel(</span><span class="s3">&quot;Daily&quot;</span><span class="s2">)</span>
+<span class="s2">plt.grid(axis=</span><span class="s3">&quot;y&quot;</span><span class="s2">)</span>
+<span class="s2">plt.tight_layout()</span>
+<span class="s2">plt.show()</span>
+<span class="s0">#%% 
+#Which product lines have higher demand from specific gender groups?</span>
+<span class="s2">((pd.crosstab(index=df[</span><span class="s3">&quot;Product_line&quot;</span><span class="s2">], columns=df[</span><span class="s3">&quot;Gender&quot;</span><span class="s2">], values=df[</span><span class="s3">&quot;Total&quot;</span><span class="s2">], aggfunc=</span><span class="s3">&quot;sum&quot;</span><span class="s2">, margins=</span><span class="s1">True</span><span class="s2">, normalize=</span><span class="s1">True</span><span class="s2">) * </span><span class="s5">100</span><span class="s2">)</span>
+ <span class="s2">.style.format(</span><span class="s3">&quot;{:.2f}%&quot;</span><span class="s2">)</span>
+ <span class="s2">.set_caption(</span><span class="s3">&quot;Product Line and Gender Distribution of Total Revenue (%)&quot;</span><span class="s2">)</span>
+ <span class="s2">.set_table_styles([</span>
+    <span class="s2">{</span><span class="s3">&quot;selector&quot;</span><span class="s2">: </span><span class="s3">&quot;caption&quot;</span><span class="s2">, </span><span class="s3">&quot;props&quot;</span><span class="s2">: [(</span><span class="s3">&quot;font-size&quot;</span><span class="s2">, </span><span class="s3">&quot;14px&quot;</span><span class="s2">), (</span><span class="s3">&quot;font-weight&quot;</span><span class="s2">, </span><span class="s3">&quot;bold&quot;</span><span class="s2">), (</span><span class="s3">&quot;text-align&quot;</span><span class="s2">, </span><span class="s3">&quot;Center&quot;</span><span class="s2">)]},</span>
+ <span class="s2">{</span><span class="s3">&quot;selector&quot;</span><span class="s2">: </span><span class="s3">&quot;th&quot;</span><span class="s2">, </span><span class="s3">&quot;props&quot;</span><span class="s2">: [(</span><span class="s3">&quot;font-size&quot;</span><span class="s2">, </span><span class="s3">&quot;12px&quot;</span><span class="s2">), (</span><span class="s3">&quot;font-weight&quot;</span><span class="s2">, </span><span class="s5">650</span><span class="s2">)]}</span>
+ <span class="s2">])</span>
+<span class="s2">)</span>
+<span class="s0">#%% 
+#Which products have the highest average unit price?</span>
+<span class="s2">(pd.pivot_table(df, index=</span><span class="s3">&quot;Product_line&quot;</span><span class="s2">, values=</span><span class="s3">&quot;Unit_price&quot;</span><span class="s2">)</span>
+<span class="s2">.sort_values(by=</span><span class="s3">&quot;Unit_price&quot;</span><span class="s2">,ascending=</span><span class="s1">False</span><span class="s2">)</span>
+<span class="s2">.style.format(</span><span class="s3">&quot;${:,.2f}&quot;</span><span class="s2">)</span>
+<span class="s2">)</span>
+<span class="s0">#%% 
+#What is the average cost of goods sold (COGS) for each product line?</span>
+<span class="s2">(pd.pivot_table(df, index=</span><span class="s3">&quot;Product_line&quot;</span><span class="s2">, values=</span><span class="s3">&quot;cogs&quot;</span><span class="s2">).sort_values(by=</span><span class="s3">&quot;cogs&quot;</span><span class="s2">, ascending=</span><span class="s1">False</span><span class="s2">)</span>
+<span class="s2">.style.format(</span><span class="s3">&quot;${:,.2f}&quot;</span><span class="s2">)</span>
+<span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">column_headers = df.columns.tolist()</span>
+<span class="s0"># Display the list of column headers</span>
+<span class="s2">print(column_headers)</span>
+
+<span class="s0">#%% 
+</span><span class="s2">df_retail[</span><span class="s3">'LN_UNIT_PRICE'</span><span class="s2">] = np.log((df.Unit_price))</span>
+<span class="s2">df_retail[</span><span class="s3">'LN_INCOME'</span><span class="s2">] = np.log((df.gross_income))</span>
+<span class="s2">df_retail[</span><span class="s3">'LN_QUANTITY'</span><span class="s2">] = np.log((df.Quantity))</span>
+
+<span class="s0">#%% 
+# Calculate percentage changes</span>
+<span class="s2">df[</span><span class="s3">'% Change in Quantity'</span><span class="s2">] = df[</span><span class="s3">'Quantity'</span><span class="s2">].pct_change() * </span><span class="s5">100</span>
+<span class="s2">df[</span><span class="s3">'% Change in Price'</span><span class="s2">] = df[</span><span class="s3">'Unit_price'</span><span class="s2">].pct_change() * </span><span class="s5">100</span>
+<span class="s0">#%% 
+# Calculate price elasticity of demand</span>
+<span class="s2">df[</span><span class="s3">'Elasticity_of_Demand'</span><span class="s2">] = df[</span><span class="s3">'% Change in Quantity'</span><span class="s2">] / df[</span><span class="s3">'% Change in Price'</span><span class="s2">]</span>
+<span class="s0">#%% 
+# Plot Quantity Demanded vs Price</span>
+
+<span class="s0">#%% 
+</span></pre>
+</body>
+</html>
